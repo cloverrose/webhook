@@ -21,6 +21,7 @@ Django, Github, Webhook
 1. git clone git://github.com/cloverrose/webhook.git
 2. cd webhook
 3. emacs secret.py
+   
    # -*- coding:utf-8 -*-
    
    port = 12345  # 自動更新したいWebアプリのポート番号
