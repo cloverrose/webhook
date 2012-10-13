@@ -34,5 +34,6 @@ Django, Github, Webhook
 ToDo
 ====
 1. masterブランチ以外の更新は無視するようにする
+   https://github.com/cloverrose/webhook/commit/c81932fd4bdea35bc0c7e9fda97f384b15c662fd で完了
 2. subprocess周りの使い方が正しいか確認
 3. 0.0.0.0:portとしているけどそこら辺も汎化
