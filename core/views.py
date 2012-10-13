@@ -14,9 +14,11 @@ def recieve(request):
     if not(request.method == 'POST' and 'payload' in request.POST):
         return HttpResponseBadRequest("error.")
 
-    branch = json.loads(request.POST['payload'])
-    print branch
-    """
+    # modified master branch?
+    ref = json.loads(request.POST['payload'])['ref']
+    print('branch [%s]' % ref)
+    if ref != 'refs/heads/master':
+        return HttpResponse("not master branch.")
 
     # kill server
     p = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
@@ -43,5 +45,5 @@ def recieve(request):
     print('Done [runserver]')
     
     os.chdir(cwd)
-    """
+
     return HttpResponse("ok.")
