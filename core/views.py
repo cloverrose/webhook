@@ -3,10 +3,37 @@
 import os
 import subprocess
 import json
+import re
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
-from webhook.secret import port, workdir, repos
+from webhook.secret import secrets
+
+
+def get_repo(url):
+    """
+    >>> repo = get_repo('https://github.com/cloverrose/webhook')
+    >>> repo == ('cloverrose', 'webhook')
+    True
+    """
+    ptn = re.compile('https?://github.com/(.+?)/(.+)')
+    mo = ptn.match(url)
+    if mo is None or len(mo.groups()) != 2:
+        return None
+    return mo.groups()
+
+
+def get_branch(ref):
+    """
+    >>> branch = get_branch('refs/heads/master')
+    >>> branch == 'master'
+    True
+    """
+    ptn = re.compile('refs/heads/(.+)')
+    mo = ptn.match(ref)
+    if mo is None or len(mo.groups()) != 1:
+        return None
+    return mo.group(1)
 
 
 @csrf_exempt
@@ -16,16 +43,29 @@ def recieve(request):
 
     jobj = json.loads(request.POST['payload'])
     # check repo
-    repo = jobj['repository']['url']
-    print('repo [%s]' % repo)
-    if repo not in repos:
+    repo_url = jobj['repository']['url']
+    print('url [%s]' % repo_url)
+    repo = get_repo(repo_url)
+    if repo is None:
+        return HttpResponse('invalid url')
+    print('repo [%s/%s]' % repo)
+    if repo not in secrets:
         return HttpResponse('not target repo')
 
-    # modified master branch?
+    target = secrets[repo]
+    branch = target['branch']
+    port = target['port']
+    workdir = target['workdir']
+
+    # check branch
     ref = jobj['ref']
-    print('branch [%s]' % ref)
-    if ref != 'refs/heads/master':
-        return HttpResponse("not master branch.")
+    print('ref [%s]' % ref)
+    br = get_branch(ref)
+    if br is None:
+        return HttpResponse('invalid ref')
+    print('branch [%s]' % br)
+    if br != branch:
+        return HttpResponse('not target branch')
 
     # kill server
     p = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
@@ -38,20 +78,22 @@ def recieve(request):
 
     cwd = os.getcwdu()
     os.chdir(workdir)
+    print('Done [cd %s]' % workdir)
 
     # pull repo
-    subprocess.call(['git', 'pull', 'origin', 'master'], cwd=workdir)
-    print('Done [git pull origin master]')
+    subprocess.call(['git', 'pull', 'origin', branch], cwd=workdir)
+    print('Done [git pull origin %s]' % branch)
 
     # run server
     newenv = os.environ.copy()
     proj_root = workdir.split('/')[-1]
     newenv['DJANGO_SETTINGS_MODULE'] = proj_root + '.settings'
     subprocess.call(
-        ['python', 'manage.py', 'runserver', '0.0.0.0:' + port],
+        ['python', 'manage.py', 'runserver', port],
         cwd=workdir, env=newenv)
-    print('Done [runserver]')
-    
+    print('Done [python manage.py runserver %s]' % port)
+
     os.chdir(cwd)
+    print('Done [cd %s]' % cwd)
 
     return HttpResponse("ok.")

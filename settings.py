@@ -149,14 +149,19 @@ LOGGING = {
 # check secret.py
 #############################################
 try:
-    from secret import port, workdir
+    from secret import secrets
 except ImportError, e:
     import sys
     print 'ImportError:', e
     print 'Please make secret.py like as'
     print '------------------------------'
-    print 'port = 12345'
-    print 'workdir = /path/to/targetproj'
+    print "secrets = {"
+    print "    ('cloverrose', 'webhook'): {"
+    print "        'branch': 'master',"
+    print "        'port': '0.0.0.0:12345',"
+    print "        'workdir': '/path/to/targetproj'"
+    print "    }"
+    print "}"
     print '------------------------------'
     quit()
 
