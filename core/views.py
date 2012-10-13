@@ -6,7 +6,7 @@ import json
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
-from webhook.secret import port, workdir
+from webhook.secret import port, workdir, repos
 
 
 @csrf_exempt
@@ -14,8 +14,15 @@ def recieve(request):
     if not(request.method == 'POST' and 'payload' in request.POST):
         return HttpResponseBadRequest("error.")
 
+    jobj = json.loads(request.POST['payload'])
+    # check repo
+    repo = jobj['repository']['url']
+    print('repo [%s]' % repo)
+    if repo not in repos:
+        return HttpResponse('not target repo')
+
     # modified master branch?
-    ref = json.loads(request.POST['payload'])['ref']
+    ref = jobj['ref']
     print('branch [%s]' % ref)
     if ref != 'refs/heads/master':
         return HttpResponse("not master branch.")
@@ -38,7 +45,8 @@ def recieve(request):
 
     # run server
     newenv = os.environ.copy()
-    newenv['DJANGO_SETTINGS_MODULE'] = 'mysite.settings'
+    proj_root = workdir.split('/')[-1]
+    newenv['DJANGO_SETTINGS_MODULE'] = proj_root + '.settings'
     subprocess.call(
         ['python', 'manage.py', 'runserver', '0.0.0.0:' + port],
         cwd=workdir, env=newenv)
