@@ -20,20 +20,9 @@ Django, Github, Webhook
 ======
 1. git clone git://github.com/cloverrose/webhook.git
 2. cd webhook
-3. 以下のようなsecret.pyを新規作成
-   
-   # -*- coding:utf-8 -*-
-   secrets = {
-       ('cloverrose', 'webhook'): {  # (username, reponame)
-           'branch': 'master',
-           'port': '0.0.0.0:12345',  # 自動更新したいWebアプリのポート番号
-           'workdir': '/path/to/targetproj'  # 自動更新したいWebアプリのmanage.pyがあるディレクトリ
-       }
-   }
-   # secrets内に複数の対象アプリを記述できる
-
+3. python manage.pyを実行してsecret.py作成に関する情報を得る
 4. nohup python manage.py runserver 0.0.0.0:12344 > /tmp/nohup.out &
-5. 自動更新したいWebアプリリポジトリのAdmin > Service Hooks > WebHook URLsにdomain.com:12344を追加
+5. 自動更新したいWebアプリリポジトリのAdmin > Service Hooks > WebHook URLsにhttp://sample.com:12344を追加
 6. 自動更新したいWebアプリを更新してpushすれば自動更新が行われる
 
 ToDo
