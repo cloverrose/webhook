@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import json
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
@@ -12,6 +13,10 @@ from webhook.secret import port, workdir
 def recieve(request):
     if not(request.method == 'POST' and 'payload' in request.POST):
         return HttpResponseBadRequest("error.")
+
+    branch = json.loads(request.POST['payload'])
+    print branch
+    """
 
     # kill server
     p = subprocess.Popen(['ps', 'ax'], stdout=subprocess.PIPE)
@@ -38,5 +43,5 @@ def recieve(request):
     print('Done [runserver]')
     
     os.chdir(cwd)
-
+    """
     return HttpResponse("ok.")
